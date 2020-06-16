@@ -49,24 +49,29 @@ def Validate_User_Input_ITDept_Rules(mytree,data,datausr,ns):
         # except:
         #     lst_errors.append("Error in assessing Rule 11")
 
-        try:
-            lst_ifsccodes=[]
-            for deduction in mytree.findall('.//ITRForm:BankAccountDtls',ns):
-                for snode in deduction.iter():
-                    if rn(snode.tag)=='IFSCCode':
-                        lst_ifsccodes.append(nz(snode.text))
+
+        ###############################################################################################################
+        #Check if this check is required
+        ###############################################################################################################
+
+        # try:
+        #     lst_ifsccodes=[]
+        #     for deduction in mytree.findall('.//ITRForm:BankAccountDtls',ns):
+        #         for snode in deduction.iter():
+        #             if rn(snode.tag)=='IFSCCode':
+        #                 lst_ifsccodes.append(nz(snode.text))
             
-            nodefound=True
-            myfile= open(FILE_NAME_WITH_PATH_IFSC_CODES)
-            str_file=myfile.read()
-            for ifsc in lst_ifsccodes:
-                if ifsc not in str_file:
-                    nodefound=False
-                    break
-            if nodefound==False:
-                lst_errors.append("15: IFSC under 'Bank Details' is not matching with the RBI database")
-        except:
-            lst_errors.append("Error in assessing Rule 15")
+        #     nodefound=True
+        #     myfile= open(FILE_NAME_WITH_PATH_IFSC_CODES)
+        #     str_file=myfile.read()
+        #     for ifsc in lst_ifsccodes:
+        #         if ifsc not in str_file:
+        #             nodefound=False
+        #             break
+        #     if nodefound==False:
+        #         lst_errors.append("15: IFSC under 'Bank Details' is not matching with the RBI database")
+        # except:
+        #     lst_errors.append("Error in assessing Rule 15")
 
         try:
             if ('TaxPaidlocalAuth' in data):

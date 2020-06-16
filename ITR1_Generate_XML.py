@@ -1,6 +1,8 @@
 import datetime as dt
 from lxml import etree
-import xmlschema
+#import xml.etree.ElementTree as etree
+#from xml.etree.ElementTree import Element, SubElement, Comment, tostring
+#import xmlschema
 from ITR1_Constants_Common_Functions import *
 
 def Generate_XML(data,mytree,ns,tax_data,chap6a,l_don_cash,l_don_oth,l_tot_don,l_elig_don,don_cash_gga,don_oth_gga,tot_don_gga,elig_don_gga,total_TDS_from_sal,total_TDS_oth_sal,total_TDS_3,total_TCS):   #l-> list
@@ -13,16 +15,6 @@ def Generate_XML(data,mytree,ns,tax_data,chap6a,l_don_cash,l_don_oth,l_tot_don,l
         root = etree.Element("{http://incometaxindiaefiling.gov.in/main}ITR")
         root_ITR1 = etree.SubElement(root, "{http://incometaxindiaefiling.gov.in/ITR1}ITR1")
         x='http://incometaxindiaefiling.gov.in/master'
-
-        CreationDate = dt.datetime.today().strftime("%Y-%m-%d")
-        log.append('Generate ceation info')
-        e1=etree.SubElement(root_ITR1, "{http://incometaxindiaefiling.gov.in/master}CreationInfo")
-        etree.SubElement(e1, "{" + x + "}SWVersionNo").text='R1'
-        etree.SubElement(e1, "{" + x + "}SWCreatedBy").text='SW92201920'
-        etree.SubElement(e1, "{" + x + "}XMLCreatedBy").text='SW92201920'
-        etree.SubElement(e1, "{" + x + "}XMLCreationDate").text=CreationDate
-        etree.SubElement(e1, "{" + x + "}IntermediaryCity").text='Delhi'
-        etree.SubElement(e1, "{" + x + "}Digest").text='-'
 
         e1=etree.SubElement(root_ITR1, "{http://incometaxindiaefiling.gov.in/master}Form_ITR1")
         etree.SubElement(e1, "{" + x + "}FormName").text='ITR-1'
@@ -90,6 +82,7 @@ def Generate_XML(data,mytree,ns,tax_data,chap6a,l_don_cash,l_don_oth,l_tot_don,l
             etree.SubElement(e1, "{" + x + "}ArrearsUnrealizedRentRcvd").text= gettval('ArrearsUnrealizedRentRcvd',data)
         etree.SubElement(e1, "{" + x + "}TotalIncomeOfHP").text= str(round(tax_data['TotalIncomeOfHP']))
         etree.SubElement(e1, "{" + x + "}IncomeOthSrc").text= str(round(tax_data['IncomeOthSrc']))
+
         #Inc from oth sources
         log.append('Generate OthersInc')
         e2=etree.SubElement(e1, "{http://incometaxindiaefiling.gov.in/master}OthersInc")
@@ -447,7 +440,7 @@ def Generate_XML(data,mytree,ns,tax_data,chap6a,l_don_cash,l_don_oth,l_tot_don,l
                 etree.SubElement(e1, node.tag).text=node.text
 
         #Preparer
-        log.append('Generate TaxReturnPreparer')
+        log.append('Generate Tax Return Preparer')
         ver_root=mytree.find('.//ITRForm:TaxReturnPreparer',ns)
         if ver_root is not None:
             e1=etree.SubElement(root_ITR1, "{http://incometaxindiaefiling.gov.in/master}TaxReturnPreparer")
@@ -455,18 +448,23 @@ def Generate_XML(data,mytree,ns,tax_data,chap6a,l_don_cash,l_don_oth,l_tot_don,l
                 etree.SubElement(e1, node.tag).text=node.text
 
         #write xml file to disk
+        #mydata=etree.tostring(root,xml_declaration=True,encoding='ISO-8859-1',method="xml")
+        #myfile=open("C:\\Users\\gokul\\Google Drive\\Gokul Learning\\Indian IT Project\\Master Excel\\page.xml","wb")
+        #myfile.write(mydata)
+        #print(mydata)
         tree=etree.ElementTree(root)
-        #tree.write("C:\\Users\\gokul\\Google Drive\\Gokul Learning\\Indian IT Project\\Master Excel\\page.xml",xml_declaration=True,encoding='ISO-8859-1',method="xml", pretty_print=True)
-        tree.write("/tmp/page.xml",xml_declaration=True,encoding='ISO-8859-1',method="xml", pretty_print=True) #AWS
+        tree.write("C:\\Users\\gokul\\Google Drive\\Gokul-Projects\\Python\\Indian IT Project\\ITR1 AY19\\Master Excel\\output_xml.xml",xml_declaration=True,encoding='ISO-8859-1',method="xml",pretty_print=True)
+        #tree.write(open("C:\\Users\\gokul\\Google Drive\\Gokul Learning\\Indian IT Project\\Master Excel\\page.xml",'w',xml_declaration=True,encoding='ISO-8859-1',method="xml")
+        #tree.write("/tmp/page.xml",xml_declaration=True,encoding='ISO-8859-1',method="xml", pretty_print=True) #AWS
         #validate xml against XSD
         #xml=etree.parse(FILE_NAME_WITH_PATH_XML_FILE)
-        log.append('Validate xml against XSD')
-        xs=etree.XMLSchema(etree.parse(FILE_NAME_WITH_PATH_XSD_FILE))
-        try:
-            xs.assertValid(tree)
-            return 'ok','ok',tree, log
-        except etree.DocumentInvalid as err:
-            return 'Schema Error',str(err.error_log),tree, log
+        #log.append('Validate xml against XSD')
+        # xs=etree.XMLSchema(etree.parse(FILE_NAME_WITH_PATH_XSD_FILE))
+        # try:
+        #     xs.assertValid(tree)
+        return 'ok','ok',tree, log
+        # except etree.DocumentInvalid as err:
+        #     return 'Schema Error',str(err.error_log),tree, log
     except Exception as e:
         log.append(e)
         return "Critical Error","Critical Error","Critical Error", log

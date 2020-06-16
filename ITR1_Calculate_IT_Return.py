@@ -42,14 +42,15 @@ def calculate_tax(total_income,age):
         elif total_income >= 1000001 :
             tempTax = (total_income - 1000000) * (0.3)
             tax_payable = round((tempTax + 112500))
-        
         return tax_payable, log
+
     except Exception as e:
         log.append(e)
         return "err", log
 
 def calc_234F(mytree,data,tax_data,ns):
     log=[]
+    intrst234F=0
     try:
         Returnfiledstatus=gettval('ReturnFileSec',data)
         res=gettval('OrigRetFiledDate',data)
@@ -91,6 +92,7 @@ def calc_234F(mytree,data,tax_data,ns):
 
 def calc_TDS_from_sal(mytree,ns):
     log=[]
+    total_tds=0
     try:
         total_tds=0
         for deduction in mytree.findall('.//ITRForm:TDSonSalaries',ns):
@@ -112,6 +114,7 @@ def calc_TDS_from_sal(mytree,ns):
 
 def calc_TDS_oth_sal(mytree,ns):
     log=[]
+    total_tds=0
     try:
         total_tds=0
         for deduction in mytree.findall('.//ITRForm:TDSonOthThanSals',ns):
@@ -133,6 +136,7 @@ def calc_TDS_oth_sal(mytree,ns):
 
 def calc_TDS_3(mytree,ns):
     log=[]
+    total_tds=0
     try:
         total_tds=0
         for deduction in mytree.findall('.//ITRForm:ScheduleTDS3Dtls',ns):
@@ -154,6 +158,7 @@ def calc_TDS_3(mytree,ns):
 
 def calc_TCS_from_sal(mytree,ns):
     log=[]
+    total_tcs=0
     try:
         total_tcs=0
         for deduction in mytree.findall('.//ITRForm:ScheduleTCS',ns):
@@ -175,6 +180,9 @@ def calc_TCS_from_sal(mytree,ns):
 
 def calc_adv_self_tax(mytree,data,ns):
     log=[]
+    advanceTax=0
+    selfAssessmentTax=0
+    selfAssessmentTax234A=0
     try:
         statecode=mytree.find('.//ITRForm:PersonalInfo//ITRForm:Address//ITRForm:StateCode',ns).text
         selfAssessmentTax=0
@@ -212,6 +220,15 @@ def calc_months(d1,d2):
 def calculate_interest(mytree,data,tax_data,ns):
     log=[]
     ierrors=[]
+    ierrors=[]
+    intrst234A=0
+    calcInterestPayable234B=0
+    intrst234C=0
+    intrst234F=0
+    adv_tax=0
+    tds=0
+    tcs=0
+    selfAssessmentTax=0
     try:
         log.append("Inside function calculate_interest")
         statecode=mytree.find('.//ITRForm:PersonalInfo//ITRForm:Address//ITRForm:StateCode',ns).text
@@ -241,9 +258,9 @@ def calculate_interest(mytree,data,tax_data,ns):
             tcs=res4[0]
         
         res=calc_adv_self_tax(mytree,data,ns)
+        for x in res[3]:
+            log.append(x)
         if res[0]=='err':
-            for x in res[3]:
-                log.append(x)
             ierrors.append("Interest calc: Error calculating Advance Tax paid/ Self assessment Tax")
         else:
             adv_tax=res[0]
@@ -291,18 +308,19 @@ def calculate_interest(mytree,data,tax_data,ns):
             agestatus = "SC"
         else:
             agestatus = "SSC"
-        
+
+        log.append("start interest 234F calc")
         intrst234F = 0
         if (agestatus == "NC" and tax_data['GrossTotIncome'] > 250000) or \
             (agestatus == "SC" and tax_data['GrossTotIncome'] > 300000) or \
             (agestatus == "SSC" and tax_data['GrossTotIncome'] > 500000) :
             res = calc_234F(mytree,data,tax_data,ns)
+            for x in res1[1]:
+                log.append(x)
             if res[0]!='err':
                 intrst234F=res[0]
             else:
                 ierrors.append("Interest calc: Unknown error calculating interest u/s 234F")
-                for x in res[1]:
-                    log.append(x)
         else:
             intrst234F = 0
     except Exception as e:
@@ -419,7 +437,7 @@ def calculate_interest(mytree,data,tax_data,ns):
 def Calculate_It_Return(mytree,data,datausr,ns):
     errors=[]
     log=[]
-    tax_data=0
+    tax_data={} #All calculated values stored in this variable
     chap6a={}
     don_cash=[]
     don_oth=[]
@@ -1008,11 +1026,14 @@ def Calculate_It_Return(mytree,data,datausr,ns):
             #calc 15
             log.append("calling function 'calculate_interest'")
             res=calculate_interest(mytree,data,tax_data,ns)
+            res_errors='ok'
+            if len(res[0])!=0:
+                res_errors='err'
             for x in res[0]:
                 errors.append(x)
             for x in res[9]:
                 log.append(x)
-            if res!='err':
+            if res_errors!='err':
                 tax_data['IntrstPayUs234A']=res[1]
                 tax_data['IntrstPayUs234B']=res[2]
                 tax_data['IntrstPayUs234C']=res[3]
@@ -1024,7 +1045,7 @@ def Calculate_It_Return(mytree,data,datausr,ns):
             errors.append("Error encountered while calculationg Interest u/s 234A, 234B, 234C, 234F")  
 
         #calc 16
-        if res!='err':
+        if res_errors!='err':
             tax_data['TotalIntrstPay']=res[1]+res[2]+res[3]+res[4]
         else:
             errors.append("Error encountered while calculating 'Total Interest, Fee Payable' (16)") 
@@ -1037,18 +1058,26 @@ def Calculate_It_Return(mytree,data,datausr,ns):
             errors.append("Error encountered while calculating 'Total Tax, Fee and Interest' (17)") 
 
         #calc 23
-        if res!='err':
-            tax_data['AdvanceTax']=res[5]
-            tax_data['TDS']=res[6]
-            tax_data['TCS']=res[7]
-            tax_data['SelfAssessmentTax']=res[8]
-        else:
+        try:
+            if res_errors!='err':
+                tax_data['AdvanceTax']=res[5]
+                tax_data['TDS']=res[6]
+                tax_data['TCS']=res[7]
+                tax_data['SelfAssessmentTax']=res[8]
+            else:
+                errors.append("Error encountered while calculating 'Advance tax, TDS, TCS and Self Assessment Taxes Paid' (23-a,b,c,d)") 
+        except Exception as e:
+            log.append(e)
             errors.append("Error encountered while calculating 'Advance tax, TDS, TCS and Self Assessment Taxes Paid' (23-a,b,c,d)") 
 
         #calc 24
-        if res!='err':
-            tax_data['TotalTaxesPaid']= max(0,res[5]+res[6]+res[7]+res[8])
-        else:
+        try:
+            if res_errors!='err':
+                tax_data['TotalTaxesPaid']= max(0,res[5]+res[6]+res[7]+res[8])
+            else:
+                errors.append("Error encountered while calculating 'Total Taxes Paid' (24)") 
+        except Exception as e:
+            log.append(e)
             errors.append("Error encountered while calculating 'Total Taxes Paid' (24)") 
 
         try:

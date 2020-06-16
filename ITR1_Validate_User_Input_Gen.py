@@ -286,7 +286,10 @@ def Validate_User_Input_Gen(mytree,data,datausr,ns):
                 error.append("Unique Number in Income Details cannot exceed 23 characters")   
         else:
             error.append("Please Select ""Filed u/s"" or ""Filed in response to notice u/s  in Income Details")                         
-
+        
+        if getfval('PerquisitesValue',data) + getfval('ProfitsInSalary',data) > getfval('Salary',data):
+            error.append("Total of allowances must not excced total of salary per section17(1)")
+        
         if getfval('GrossRentReceived',data)!=0 or getfval('TaxPaidlocalAuth',data)!=0 or getfval('InterestPayable',data)!=0:
             val=gettval('TypeOfHP',data) 
             if val=='notfound' or val=='err':

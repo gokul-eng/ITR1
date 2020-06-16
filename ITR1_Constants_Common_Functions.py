@@ -1,7 +1,7 @@
 import datetime as dt
 import math
 
-FILE_NAME_WITH_PATH_XML_FILE='C:\\Users\\gokul\\Google Drive\\Gokul Learning\\Indian IT Project\\Master Excel\\ITR1_ABBPK7259H.xml'
+FILE_NAME_WITH_PATH_XML_FILE='C:\\Users\\gokul\\Google Drive\\Gokul-Projects\\Python\\Indian IT Project\\ITR1 AY19\Master Excel\\ITR1_ABBPK7259H.xml'
 FILE_NAME_WITH_PATH_XSD_FILE='C:\\Users\\gokul\\Google Drive\\Gokul Learning\\Indian IT Project\\ITR-1_2019_Main.xsd'
 FILE_NAME_WITH_PATH_IFSC_CODES="C:\\Users\\gokul\\Google Drive\\Gokul Learning\\Indian IT Project\\ifsc_codes.txt"
 #FILE_NAME_WITH_PATH_XML_FILE = sys.argv[1]
